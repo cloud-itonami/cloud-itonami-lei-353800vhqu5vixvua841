@@ -1,0 +1,392 @@
+;; Verified public-register citations for the legal entity archived by this repository.
+;;
+;; Every row is checked live by tools/verify_citations.cljs:
+;;   * GET :cite/url must answer HTTP 2xx
+;;   * :cite/expect-substring must appear in the response body
+;;
+;; A URL that cannot be fetched, or whose body no longer carries the claim, is a
+;; DRIFT and fails the gate. Nothing is recorded here that was not retrieved.
+;;
+;; FIVE independent authorities are cited, not one:
+;;   * GLEIF, the global LEI system (the entity record, the RA000412 entry in the
+;;     registration-authorities registry, the T417 entry in the entity-legal-forms
+;;     registry, and the LEI record of the managing LOU)
+;;   * Japan's National Tax Agency, at the corporate-number publication site
+;;     (houjin-bangou.nta.go.jp) under corporate number 7010001065142
+;;   * Japan's METI, at gBizINFO (info.gbiz.go.jp) under the same corporate number
+;;   * the United States, via the SEC's EDGAR submissions API (the former
+;;     NYSE-listed ADR filer, CIK 0000769594 -- 20-F, 6-K, F-6 POS, 25, 15F-12B)
+;;   * the issuer itself, at the Social Media Policy page this repository archives
+;;     and at its published inquiry form
+;;
+;; HOW THE JAPANESE STATE AND GLEIF ARE LINKED -- BY SHARED KEY. GLEIF names
+;; RA000412 -- Companies Registration (登記) at the Legal Affairs Bureau (法務局)
+;; -- as both register of record and validation authority, and records
+;; registeredAs 0100-01-065142 (the 会社法人等番号, the commercial-registry
+;; number). Japan's corporate number (法人番号) is BY CONSTRUCTION one check
+;; digit prefixed to those same 12 digits: 7 + 010001065142 = 7010001065142.
+;; The NTA and gBizINFO rows below resolve THAT number to this legal name at
+;; this seat. So the GLEIF<->Japan link is a direct key, not an address match.
+;; The NTA designated the number on 平成27年10月5日 (2015-10-05, row
+;; nta-designation-date).
+;;
+;; THE RENAME, RECORDED BY TWO STATES. Effective 令和7年7月1日 (2025-07-01) the
+;; entity changed its trade name from 日本電信電話株式会社 (Nippon Telegraph and
+;; Telephone Corporation) to ＮＴＴ株式会社 (NTT, Inc.). GLEIF carries the old
+;; name as PREVIOUS_LEGAL_NAME (row gleif-previous-name); the NTA change history
+;; carries the event 商号又は名称の変更 with that 事由発生年月日 (rows
+;; nta-previous-name, nta-rename-event, nta-rename-effective). The SEC has NOT
+;; recorded the rename: EDGAR still prints the former English name (row
+;; sec-former-name), because the filer went dormant in 2018 after Form 25 /
+;; 15F-12B ADR deregistration (last filing 2018-04-13; the ADR now trades OTC
+;; as NTTYY, row sec-adr-ticker). So the GLEIF<->SEC link is by FORMER name +
+;; address only -- EDGAR also carries "lei":null (row sec-lei-null, which goes
+;; red the day EDGAR starts printing the LEI, at which point a direct-key row
+;; should replace it).
+;;
+;; THE ADDRESS TRIANGLE. GLEIF records 大手町一丁目5番1号, 東京都 千代田区,
+;; postal 100-8116 (rows gleif-address, gleif-city, gleif-postal). The SEC's own
+;; address record prints OTEMACHI FIRST SQUARE, EAST TOWER, 5-1, OTEMACHI
+;; 1-CHOME, CHIYODA-KU, TOKYO JAPAN, 100-8116 (rows sec-street, sec-street2,
+;; sec-city, sec-zip). The NTA and gBizINFO print 東京都千代田区大手町１丁目５番１号
+;; (rows nta-address, gbiz-address). Three states' worth of registers, one seat,
+;; none of them quoting each other.
+;;
+;; WHY THE REGISTER OF RECORD HAS NO PER-ENTITY ROW. The Legal Affairs Bureau's
+;; registry is served through the paid, login-gated 登記情報提供サービス at
+;; www1.touki.or.jp (the very website GLEIF's RA000412 entry names). The portal
+;; answers HTTP 200 (row touki-portal) but exposes no stable public per-entity
+;; URL, so no row can cite the registry extract itself. The registry NUMBER is
+;; instead corroborated through the NTA corporate number, which embeds it (see
+;; the shared-key paragraph above).
+;;
+;; WHAT IS DELIBERATELY NOT CITED. GLEIF's nextRenewalDate moves every year by
+;; construction; a row on it would go red on schedule while saying nothing
+;; about the entity. The TSE ticker 9432 (claimed in blueprint.edn and
+;; README.md) has no server-rendered per-entity page at jpx.co.jp that this
+;; gate could check, so it is NOT proven by any row here -- row sec-adr-ticker
+;; proves only that EDGAR lists the OTC ADR ticker NTTYY, and the managing-LOU
+;; rows prove only that the LOU is Tokyo Stock Exchange, Inc., not that this
+;; entity lists there. The former corporate site www.ntt.co.jp answers HTTP 410
+;; Gone (noted in README.md); no row cites it -- the issuer rows cite the
+;; current group site group.ntt, including the exact page whose text
+;; 80-data/public/tos.journal.edn archives (:tos/source-url
+;; https://group.ntt/en/privacy/social.html, still live -- row
+;; issuer-social-policy). The EDGAR body also carries a filings list that
+;; changed with every filing while the filer was active; rows target only
+;; stable header fields.
+;;
+;; :cite/row-kind is the honest part of this catalog and should be read before
+;; the claims:
+;;
+;;   :identity   the substring names this entity, its identifiers, or its seat.
+;;               Point the URL at a different company and the row fails.
+;;   :attribute  the substring is TRUE OF THIS ENTITY BUT NOT ONLY OF IT
+;;               (status ACTIVE, city TOKYO, a Reiwa date, an SIC code).
+;;               Such a row can survive a swap to a similar company. It is
+;;               recorded because it corroborates, not because it identifies.
+;;   :definition the substring resolves a code or body the entity record points
+;;               at (RA000412, T417, the managing LOU, the registry portal). It
+;;               says the named register, legal form or LOU exists; it says
+;;               nothing about NTT by itself.
+;;
+;; Of the entries below, 17 are :identity, 19 are :attribute and 5 are
+;; :definition. A reader who treats all 41 as identifying would overstate what
+;; this catalog proves -- which is the error this field exists to prevent.
+;;
+;; Substrings are taken from the RAW response body (GLEIF JSON escapes Japanese
+;; text as \uXXXX, so GLEIF rows over Japanese values pin the literal
+;; backslash-u bytes; the NTA, gBizINFO and issuer HTML serve UTF-8 and are
+;; pinned in Japanese; EDGAR JSON is ASCII) and were each checked against the
+;; fetched bytes before this file was written (2026-08-22).
+{:catalog/subject
+ #:company{:legal-name "ＮＴＴ株式会社"
+           :other-name "NTT, Inc."
+           :previous-name "日本電信電話株式会社 (Nippon Telegraph and Telephone Corporation, until 2025-07-01)"
+           :lei "353800VHQU5VIXVUA841"
+           :jurisdiction "JP"
+           :registered-at "RA000412"
+           :registered-as "0100-01-065142"
+           :corporate-number "7010001065142"
+           :legal-form "T417"
+           :sec-cik "0000769594"
+           :ticker "9432 (TSE Prime; not proven by any row here -- see header)"
+           :website "https://group.ntt"}
+ :catalog/authorities
+ [{:authority/id :gleif
+   :authority/name "Global Legal Entity Identifier Foundation"
+   :authority/root "https://api.gleif.org/"}
+  {:authority/id :jp-nta
+   :authority/name "National Tax Agency, Corporate Number Publication Site (国税庁 法人番号公表サイト)"
+   :authority/root "https://www.houjin-bangou.nta.go.jp/"}
+  {:authority/id :jp-meti-gbizinfo
+   :authority/name "Ministry of Economy, Trade and Industry, gBizINFO (経済産業省)"
+   :authority/root "https://info.gbiz.go.jp/"}
+  {:authority/id :us-sec
+   :authority/name "U.S. Securities and Exchange Commission, EDGAR"
+   :authority/root "https://data.sec.gov/"}
+  {:authority/id :issuer
+   :authority/name "NTT, Inc., at its own published website"
+   :authority/root "https://group.ntt/"}]
+ :catalog/entries
+ [
+  ;; ── GLEIF, the entity record ──────────────────────────────────────────
+  {:cite/id "gleif-lei"
+   :cite/authority :gleif
+   :cite/row-kind :identity
+   :cite/url "https://api.gleif.org/api/v1/lei-records/353800VHQU5VIXVUA841"
+   :cite/expect-substring "\"lei\":\"353800VHQU5VIXVUA841\""
+   :cite/claim "GLEIF issues LEI 353800VHQU5VIXVUA841."}
+  {:cite/id "gleif-legal-name"
+   :cite/authority :gleif
+   :cite/row-kind :identity
+   :cite/url "https://api.gleif.org/api/v1/lei-records/353800VHQU5VIXVUA841"
+   :cite/expect-substring "\"name\":\"\\uff2e\\uff34\\uff34\\u682a\\u5f0f\\u4f1a\\u793e\""
+   :cite/claim "GLEIF records the legal name ＮＴＴ株式会社 (fullwidth NTT + 株式会社). The raw JSON \\u-escapes it, so this row pins the literal backslash-u bytes."}
+  {:cite/id "gleif-en-name"
+   :cite/authority :gleif
+   :cite/row-kind :identity
+   :cite/url "https://api.gleif.org/api/v1/lei-records/353800VHQU5VIXVUA841"
+   :cite/expect-substring "\"name\":\"NTT, Inc.\""
+   :cite/claim "GLEIF records NTT, Inc. as the ALTERNATIVE_LANGUAGE_LEGAL_NAME -- the ASCII name a byte-level gate can pin directly."}
+  {:cite/id "gleif-previous-name"
+   :cite/authority :gleif
+   :cite/row-kind :identity
+   :cite/url "https://api.gleif.org/api/v1/lei-records/353800VHQU5VIXVUA841"
+   :cite/expect-substring "\"name\":\"\\u65e5\\u672c\\u96fb\\u4fe1\\u96fb\\u8a71\\u682a\\u5f0f\\u4f1a\\u793e\""
+   :cite/claim "GLEIF records 日本電信電話株式会社 as PREVIOUS_LEGAL_NAME -- the pivot that ties the dormant EDGAR filer (still under the former English name) to this record."}
+  {:cite/id "gleif-registered-as"
+   :cite/authority :gleif
+   :cite/row-kind :identity
+   :cite/url "https://api.gleif.org/api/v1/lei-records/353800VHQU5VIXVUA841"
+   :cite/expect-substring "\"registeredAs\":\"0100-01-065142\""
+   :cite/claim "Commercial-registry number (会社法人等番号) 0100-01-065142. Its 12 digits reappear inside corporate number 7010001065142 -- the shared key the NTA and gBizINFO rows resolve."}
+  {:cite/id "gleif-validated-as"
+   :cite/authority :gleif
+   :cite/row-kind :identity
+   :cite/url "https://api.gleif.org/api/v1/lei-records/353800VHQU5VIXVUA841"
+   :cite/expect-substring "\"validatedAs\":\"0100-01-065142\""
+   :cite/claim "GLEIF validated the record against the SAME registry number, not merely recorded it."}
+  {:cite/id "gleif-address"
+   :cite/authority :gleif
+   :cite/row-kind :identity
+   :cite/url "https://api.gleif.org/api/v1/lei-records/353800VHQU5VIXVUA841"
+   :cite/expect-substring "\"addressLines\":[\"\\u5927\\u624b\\u753a\\u4e00\\u4e01\\u76ee5\\u756a1\\u53f7\"]"
+   :cite/claim "Registered seat 大手町一丁目5番1号 (Otemachi 1-5-1). One corner of the address triangle with the SEC and NTA rows."}
+  {:cite/id "gleif-city"
+   :cite/authority :gleif
+   :cite/row-kind :attribute
+   :cite/url "https://api.gleif.org/api/v1/lei-records/353800VHQU5VIXVUA841"
+   :cite/expect-substring "\"city\":\"\\u6771\\u4eac\\u90fd \\u5343\\u4ee3\\u7530\\u533a\""
+   :cite/claim "City 東京都 千代田区 (Chiyoda-ku, Tokyo)."}
+  {:cite/id "gleif-postal"
+   :cite/authority :gleif
+   :cite/row-kind :attribute
+   :cite/url "https://api.gleif.org/api/v1/lei-records/353800VHQU5VIXVUA841"
+   :cite/expect-substring "\"postalCode\":\"100-8116\""
+   :cite/claim "Postal code 100-8116 -- the same code the SEC's address record prints."}
+  {:cite/id "gleif-status-active"
+   :cite/authority :gleif
+   :cite/row-kind :attribute
+   :cite/url "https://api.gleif.org/api/v1/lei-records/353800VHQU5VIXVUA841"
+   :cite/expect-substring "\"status\":\"ACTIVE\""
+   :cite/claim "Entity status ACTIVE."}
+  {:cite/id "gleif-corroboration"
+   :cite/authority :gleif
+   :cite/row-kind :attribute
+   :cite/url "https://api.gleif.org/api/v1/lei-records/353800VHQU5VIXVUA841"
+   :cite/expect-substring "\"corroborationLevel\":\"FULLY_CORROBORATED\""
+   :cite/claim "Registration is FULLY_CORROBORATED against the register of record."}
+  {:cite/id "gleif-registered-at"
+   :cite/authority :gleif
+   :cite/row-kind :attribute
+   :cite/url "https://api.gleif.org/api/v1/lei-records/353800VHQU5VIXVUA841"
+   :cite/expect-substring "\"registeredAt\":{\"id\":\"RA000412\""
+   :cite/claim "GLEIF names RA000412 as the register of record. Resolved by the gleif-ra-* and touki-portal rows."}
+  {:cite/id "gleif-validated-at"
+   :cite/authority :gleif
+   :cite/row-kind :attribute
+   :cite/url "https://api.gleif.org/api/v1/lei-records/353800VHQU5VIXVUA841"
+   :cite/expect-substring "\"validatedAt\":{\"id\":\"RA000412\""
+   :cite/claim "The validation authority is the same register, RA000412."}
+  {:cite/id "gleif-legal-form"
+   :cite/authority :gleif
+   :cite/row-kind :attribute
+   :cite/url "https://api.gleif.org/api/v1/lei-records/353800VHQU5VIXVUA841"
+   :cite/expect-substring "\"legalForm\":{\"id\":\"T417\""
+   :cite/claim "Legal form ELF code T417. Resolved by row gleif-elf-kk."}
+  {:cite/id "gleif-managing-lou"
+   :cite/authority :gleif
+   :cite/row-kind :attribute
+   :cite/url "https://api.gleif.org/api/v1/lei-records/353800VHQU5VIXVUA841"
+   :cite/expect-substring "\"managingLou\":\"353800279ADEFGKNTV65\""
+   :cite/claim "The managing LOU is 353800279ADEFGKNTV65. Resolved by row gleif-lou-tse."}
+
+  ;; ── GLEIF, the registries the record points at ────────────────────────
+  {:cite/id "gleif-ra-companies-registration"
+   :cite/authority :gleif
+   :cite/row-kind :definition
+   :cite/url "https://api.gleif.org/api/v1/registration-authorities/RA000412"
+   :cite/expect-substring "\"internationalName\":\"Companies Registration\""
+   :cite/claim "RA000412 is Companies Registration -- the Japanese commercial registry."}
+  {:cite/id "gleif-ra-jurisdiction"
+   :cite/authority :gleif
+   :cite/row-kind :definition
+   :cite/url "https://api.gleif.org/api/v1/registration-authorities/RA000412"
+   :cite/expect-substring "\"jurisdiction\":\"Japan\""
+   :cite/claim "RA000412's jurisdiction is Japan."}
+  {:cite/id "gleif-elf-kk"
+   :cite/authority :gleif
+   :cite/row-kind :definition
+   :cite/url "https://api.gleif.org/api/v1/entity-legal-forms/T417"
+   :cite/expect-substring "\"transliteratedName\":\"kabusikigaisya\""
+   :cite/claim "ELF code T417 is 株式会社 (kabushiki gaisha), the Japanese stock company form."}
+  {:cite/id "gleif-lou-tse"
+   :cite/authority :gleif
+   :cite/row-kind :definition
+   :cite/url "https://api.gleif.org/api/v1/lei-records/353800279ADEFGKNTV65"
+   :cite/expect-substring "\"name\":\"Tokyo Stock Exchange, Inc.\""
+   :cite/claim "The managing LOU 353800279ADEFGKNTV65 is Tokyo Stock Exchange, Inc. This says who manages the LEI record; it does NOT prove a TSE listing."}
+
+  ;; ── the register-of-record portal (definition only -- see header) ─────
+  {:cite/id "touki-portal"
+   :cite/authority :jp-nta
+   :cite/row-kind :definition
+   :cite/url "https://www1.touki.or.jp/"
+   :cite/expect-substring "登記情報提供サービス"
+   :cite/claim "The registry portal GLEIF's RA000412 entry names answers HTTP 200 and calls itself 登記情報提供サービス. Login-gated; no stable public per-entity URL exists, which is why no row cites the registry extract itself."}
+
+  ;; ── Japan NTA, corporate-number publication site ──────────────────────
+  {:cite/id "nta-number"
+   :cite/authority :jp-nta
+   :cite/row-kind :identity
+   :cite/url "https://www.houjin-bangou.nta.go.jp/henkorireki-johoto.html?selHouzinNo=7010001065142"
+   :cite/expect-substring "7010001065142"
+   :cite/claim "The NTA publishes corporate number 7010001065142 -- check digit 7 prefixed to GLEIF's registeredAs digits 010001065142."}
+  {:cite/id "nta-name"
+   :cite/authority :jp-nta
+   :cite/row-kind :identity
+   :cite/url "https://www.houjin-bangou.nta.go.jp/henkorireki-johoto.html?selHouzinNo=7010001065142"
+   :cite/expect-substring "ＮＴＴ株式会社"
+   :cite/claim "The NTA resolves that number to ＮＴＴ株式会社 -- the same legal name GLEIF records."}
+  {:cite/id "nta-previous-name"
+   :cite/authority :jp-nta
+   :cite/row-kind :identity
+   :cite/url "https://www.houjin-bangou.nta.go.jp/henkorireki-johoto.html?selHouzinNo=7010001065142"
+   :cite/expect-substring "日本電信電話株式会社"
+   :cite/claim "The NTA change history still carries 日本電信電話株式会社 -- the same PREVIOUS_LEGAL_NAME GLEIF records. Two authorities agree on the rename."}
+  {:cite/id "nta-address"
+   :cite/authority :jp-nta
+   :cite/row-kind :identity
+   :cite/url "https://www.houjin-bangou.nta.go.jp/henkorireki-johoto.html?selHouzinNo=7010001065142"
+   :cite/expect-substring "東京都千代田区大手町１丁目５番１号"
+   :cite/claim "The NTA prints the seat 東京都千代田区大手町１丁目５番１号 -- the second corner of the address triangle."}
+  {:cite/id "nta-rename-event"
+   :cite/authority :jp-nta
+   :cite/row-kind :attribute
+   :cite/url "https://www.houjin-bangou.nta.go.jp/henkorireki-johoto.html?selHouzinNo=7010001065142"
+   :cite/expect-substring "商号又は名称の変更"
+   :cite/claim "The change history records a 商号又は名称の変更 (trade-name change) event -- the rename this catalog's header describes."}
+  {:cite/id "nta-rename-effective"
+   :cite/authority :jp-nta
+   :cite/row-kind :attribute
+   :cite/url "https://www.houjin-bangou.nta.go.jp/henkorireki-johoto.html?selHouzinNo=7010001065142"
+   :cite/expect-substring "令和7年7月1日"
+   :cite/claim "The 事由発生年月日 of that change is 令和7年7月1日 (2025-07-01)."}
+  {:cite/id "nta-designation-date"
+   :cite/authority :jp-nta
+   :cite/row-kind :attribute
+   :cite/url "https://www.houjin-bangou.nta.go.jp/henkorireki-johoto.html?selHouzinNo=7010001065142"
+   :cite/expect-substring "平成27年10月5日"
+   :cite/claim "The 法人番号指定年月日 is 平成27年10月5日 (2015-10-05), when the corporate-number system first assigned the number."}
+
+  ;; ── Japan METI, gBizINFO ──────────────────────────────────────────────
+  {:cite/id "gbiz-name"
+   :cite/authority :jp-meti-gbizinfo
+   :cite/row-kind :identity
+   :cite/url "https://info.gbiz.go.jp/hojin/ichiran?hojinBango=7010001065142"
+   :cite/expect-substring "ＮＴＴ株式会社"
+   :cite/claim "gBizINFO independently resolves the same corporate number to ＮＴＴ株式会社."}
+  {:cite/id "gbiz-number"
+   :cite/authority :jp-meti-gbizinfo
+   :cite/row-kind :identity
+   :cite/url "https://info.gbiz.go.jp/hojin/ichiran?hojinBango=7010001065142"
+   :cite/expect-substring "7010001065142"
+   :cite/claim "gBizINFO prints the corporate number 7010001065142 in the result body."}
+  {:cite/id "gbiz-address"
+   :cite/authority :jp-meti-gbizinfo
+   :cite/row-kind :identity
+   :cite/url "https://info.gbiz.go.jp/hojin/ichiran?hojinBango=7010001065142"
+   :cite/expect-substring "東京都千代田区大手町１丁目５番１号"
+   :cite/claim "gBizINFO prints the same seat as the NTA -- a second Japanese authority on the address."}
+
+  ;; ── US SEC, EDGAR submissions API (former-name + address link only) ───
+  {:cite/id "sec-former-name"
+   :cite/authority :us-sec
+   :cite/row-kind :identity
+   :cite/url "https://data.sec.gov/submissions/CIK0000769594.json"
+   :cite/expect-substring "\"name\":\"NIPPON TELEGRAPH & TELEPHONE CORP\""
+   :cite/claim "EDGAR names CIK 0000769594 by this entity's FORMER English name (the filer went dormant in 2018, before the 2025 rename). The link to this LEI runs through GLEIF's PREVIOUS_LEGAL_NAME plus the address rows below."}
+  {:cite/id "sec-street"
+   :cite/authority :us-sec
+   :cite/row-kind :identity
+   :cite/url "https://data.sec.gov/submissions/CIK0000769594.json"
+   :cite/expect-substring "\"street1\":\"OTEMACHI FIRST SQUARE, EAST TOWER, 5-1\""
+   :cite/claim "The SEC's business address names the Otemachi First Square seat."}
+  {:cite/id "sec-street2"
+   :cite/authority :us-sec
+   :cite/row-kind :identity
+   :cite/url "https://data.sec.gov/submissions/CIK0000769594.json"
+   :cite/expect-substring "\"street2\":\"OTEMACHI 1-CHOME, CHIYODA-KU\""
+   :cite/claim "OTEMACHI 1-CHOME, CHIYODA-KU -- the third corner of the address triangle, in the SEC's own transliteration."}
+  {:cite/id "sec-city"
+   :cite/authority :us-sec
+   :cite/row-kind :attribute
+   :cite/url "https://data.sec.gov/submissions/CIK0000769594.json"
+   :cite/expect-substring "\"city\":\"TOKYO JAPAN\""
+   :cite/claim "City TOKYO JAPAN."}
+  {:cite/id "sec-zip"
+   :cite/authority :us-sec
+   :cite/row-kind :attribute
+   :cite/url "https://data.sec.gov/submissions/CIK0000769594.json"
+   :cite/expect-substring "\"zipCode\":\"100-8116\""
+   :cite/claim "Postal code 100-8116 -- byte-identical to GLEIF's postalCode."}
+  {:cite/id "sec-incorporation"
+   :cite/authority :us-sec
+   :cite/row-kind :attribute
+   :cite/url "https://data.sec.gov/submissions/CIK0000769594.json"
+   :cite/expect-substring "\"stateOfIncorporationDescription\":\"Japan\""
+   :cite/claim "Incorporated in Japan, per the SEC."}
+  {:cite/id "sec-lei-null"
+   :cite/authority :us-sec
+   :cite/row-kind :attribute
+   :cite/url "https://data.sec.gov/submissions/CIK0000769594.json"
+   :cite/expect-substring "\"lei\":null"
+   :cite/claim "EDGAR does NOT record this entity's LEI -- the GLEIF<->SEC link is by former name + address only. This row goes red the day EDGAR starts printing the LEI; replace it with a direct-key row then."}
+  {:cite/id "sec-sic"
+   :cite/authority :us-sec
+   :cite/row-kind :attribute
+   :cite/url "https://data.sec.gov/submissions/CIK0000769594.json"
+   :cite/expect-substring "\"sicDescription\":\"Telephone Communications (No Radiotelephone)\""
+   :cite/claim "SIC 4813, Telephone Communications -- consistent with the README's ISIC 6110 (wired telecommunications) classification, from an authority that never saw it."}
+  {:cite/id "sec-adr-ticker"
+   :cite/authority :us-sec
+   :cite/row-kind :attribute
+   :cite/url "https://data.sec.gov/submissions/CIK0000769594.json"
+   :cite/expect-substring "\"tickers\":[\"NTTYY\"]"
+   :cite/claim "EDGAR lists the OTC ADR ticker NTTYY. This is NOT the TSE ticker 9432, which no row here proves."}
+
+  ;; ── the issuer itself ─────────────────────────────────────────────────
+  {:cite/id "issuer-social-policy"
+   :cite/authority :issuer
+   :cite/row-kind :attribute
+   :cite/url "https://group.ntt/en/privacy/social.html"
+   :cite/expect-substring "<title>NTT Group Social Media Policy | Privacy Policy | NTT</title>"
+   :cite/claim "The exact page 80-data/public/tos.journal.edn archives (its recorded :tos/source-url) is still live and still titles itself the NTT Group Social Media Policy."}
+  {:cite/id "issuer-contact"
+   :cite/authority :issuer
+   :cite/row-kind :attribute
+   :cite/url "https://group.ntt/en/contact/"
+   :cite/expect-substring "<title>Contact us | NTT</title>"
+   :cite/claim "The inquiry form blueprint.edn records (:company/inquiry-form-url) is live at the issuer's current group site."}
+ ]}
