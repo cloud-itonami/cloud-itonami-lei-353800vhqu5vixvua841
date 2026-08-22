@@ -12,7 +12,7 @@ is the source of record.
 
 ## Company identity
 
-- **Legal name**: ＮＴＴ株式会社 (Nippon Telegraph and Telephone Corporation)
+- **Legal name**: ＮＴＴ株式会社 (NTT, Inc.; renamed 2025-07-01 from 日本電信電話株式会社 / Nippon Telegraph and Telephone Corporation — see `facts/catalog.edn`)
 - **LEI (ISO 17442)**: [353800VHQU5VIXVUA841](https://search.gleif.org/#/record/353800VHQU5VIXVUA841) (GLEIF entity-verified, JP)
 - **Jurisdiction**: JP
 - **Website**: https://group.ntt
@@ -22,8 +22,19 @@ is the source of record.
 ## Contents
 
 - `80-data/public/tos.journal.edn` — EDN quad-log of the archived policy text.
+  Its recorded `:tos/source-url` (`https://group.ntt/en/privacy/social.html`) is
+  still live — checked by row `issuer-social-policy` in `facts/catalog.edn`.
 - `NOTICE` — copyright/attribution statement.
 - `blueprint.edn` — machine-readable company identity record.
+- `facts/catalog.edn` — 41 live-checked citations across five independent
+  authorities (GLEIF, Japan NTA corporate-number site, METI gBizINFO, US SEC
+  EDGAR, the issuer), each with a `:cite/row-kind` stating what it does and
+  does not prove. Includes the 2025-07-01 rename (日本電信電話株式会社 →
+  ＮＴＴ株式会社) as recorded by GLEIF and the NTA.
+- `tools/verify_citations.cljs` — the gate: every citation must answer HTTP 2xx
+  and carry its expected substring. Run
+  `nbb tools/verify_citations.cljs facts/catalog.edn --min 13`
+  (exit 0 = all checked and clean, 1 = drift, 2 = could not answer).
 
 ## Design rationale
 
